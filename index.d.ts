@@ -198,14 +198,15 @@ declare module 'eris' {
     guildCreateTimeout?: number,
     largeThreshold?: number,
     lastShardID?: number,
-    maxShards?: number,
+    maxShards?: number | "auto",
     messageLimit?: number,
     opusOnly?: boolean,
     restMode?: boolean,
     seedVoiceConnections?: boolean,
     sequencerWaiter?: number,
     defaultImageFormat?: string,
-    defaultImageSize?: number
+    defaultImageSize?: number,
+    ws?: any
   }
   type CommandClientOptions = {
     defaultHelpCommand?: boolean,
@@ -214,7 +215,7 @@ declare module 'eris' {
     ignoreSelf?: boolean,
     name?: string,
     owner?: string,
-    prefix?: string,
+    prefix?: string | Array<string>,
     defaultCommandOptions?: CommandOptions
   }
   type GenericCheckFunction<T> = (msg: Message) => T;
@@ -283,7 +284,9 @@ declare module 'eris' {
       ownerID?: string,
       topic?: string,
       bitrate?: number,
-      userLimit?: number
+      userLimit?: number,
+      nsfw?: boolean,
+      parentID?: string
     }, reason?: string): Promise<GroupChannel | GuildChannel>;
     editChannelPosition(channelID: string, position: number): Promise<void>;
     deleteChannel(channelID: string, reason?: string): Promise<void>;
@@ -726,6 +729,7 @@ declare module 'eris' {
     guild: Guild;
     messages: Collection<Message>;
     lastMessageID: string;
+    parentID?: string;
     lastPinTimestamp: number;
     permissionOverwrites: Collection<PermissionOverwrite>;
     type: number;
@@ -740,10 +744,11 @@ declare module 'eris' {
     permissionsOf(memberID: string): Permission;
     edit(
       options: {
-        name: string,
-        topic: string,
-        bitrate: number,
-        userLimit: number
+        name?: string,
+        topic?: string,
+        bitrate?: number,
+        userLimit?: number,
+        nsfw?: boolean
       }, reason?: string
     ): Promise<GuildChannel>;
     editPosition(position: number): Promise<void>;
@@ -756,6 +761,10 @@ declare module 'eris' {
     createWebhook(options: { name: string, avatar: string }, reason?: string): Promise<Webhook>;
     deleteMessages(messageIDs: Array<string>): Promise<void>;
     purge(limit?: number, filter?: (m: Message) => boolean, before?: string, after?: string): Promise<number>;
+  }
+
+  export class CategoryChannel extends GuildChannel {
+    channels?: Collection<GuildChannel>;
   }
 
   export class GuildIntegration extends Base {
@@ -831,8 +840,7 @@ declare module 'eris' {
   export class Message extends Base {
     id: string;
     createdAt: number;
-    channel: Channel;
-    guild?: Guild;
+    channel: PrivateChannel | GuildChannel | GroupChannel;
     timestamp: number;
     type: number;
     author: User;
